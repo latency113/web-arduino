@@ -804,17 +804,31 @@
       };
       const client = mqtt.connect(broker, options);
 
-      client.on("connect", () => {
+        client.on("connect", () => {
         document.getElementById("status-dot").classList.add("online");
-        document.getElementById("status-text").innerText =
-          "เชื่อมต่อสำเร็จแล้ว";
+        document.getElementById("status-text").innerText = "เชื่อมต่อสำเร็จ";
+
+        // รอฟังสถานะจากบอร์ด
+        client.subscribe("home/status");
         client.subscribe("home/temp");
         client.subscribe("home/humi");
       });
-      client.on("error", (err) => {
-        document.getElementById("status-text").innerText =
-          "เกิดข้อผิดพลาดในการเชื่อมต่อ";
-        console.error(err);
+
+      // ตรวจสอบข้อความที่ได้รับ
+      client.on("message", (topic, payload) => {
+        if (topic === "home/status") {
+          const status = payload.toString();
+          const statusText = document.getElementById("status-text");
+          const dot = document.getElementById("status-dot");
+
+          if (status === "ONLINE") {
+            statusText.innerText = "ขณะนี้เครื่องเปิดอยู่";
+            dot.style.background = "#34c759"; // สีเขียว
+          } else {
+            statusText.innerText = "ขณะนี้เครื่องปิดอยู่";
+            dot.style.background = "#ff3b30"; // สีแดง
+          }
+        }
       });
 
       /* ── Relay toggle ── */
