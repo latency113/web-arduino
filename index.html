@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cloud Relay Control</title>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <style>
+      :root {
+        --bg: #fafafa;
+        --card: #ffffff;
+        --text-main: #111111;
+        --text-sub: #888888;
+        --border: #eeeeee;
+        --accent: #000000;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: -apple-system, sans-serif;
+      }
+      body {
+        background-color: var(--bg);
+        color: var(--text-main);
+        display: flex;
+        justify-content: center;
+        padding: 40px 20px;
+      }
+      .container {
+        width: 100%;
+        max-width: 360px;
+      }
+      header {
+        margin-bottom: 40px;
+      }
+      .status {
+        font-size: 12px;
+        color: var(--text-sub);
+        display: flex;
+        align-items: center;
+        margin-top: 8px;
+      }
+      .dot {
+        width: 6px;
+        height: 6px;
+        background: #ccc;
+        border-radius: 50%;
+        margin-right: 8px;
+        transition: 0.3s;
+      }
+      .dot.online {
+        background: #34c759;
+        box-shadow: 0 0 8px #34c759;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .btn {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+      .btn:active {
+        transform: scale(0.95);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Cloud Control</h1>
+        <div class="status">
+          <span id="status-dot" class="dot"></span>
+          <span id="status-text">Connecting to Cloud...</span>
+        </div>
+      </header>
+
+      <div class="card">
+        <div>
+          <h3>Relay 1</h3>
+          <p style="font-size: 12px; color: var(--text-sub)">Main Switch</p>
+        </div>
+        <div>
+          <button class="btn" onclick="send('home/relay1', 'ON')">On</button>
+          <button class="btn" onclick="send('home/relay1', 'OFF')">Off</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div>
+          <h3>Relay 2</h3>
+          <p style="font-size: 12px; color: var(--text-sub)">Aux Power</p>
+        </div>
+        <div>
+          <button class="btn" onclick="send('home/relay2', 'ON')">On</button>
+          <button class="btn" onclick="send('home/relay2', 'OFF')">Off</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // --- ตั้งค่า HiveMQ Cloud ---
+      const broker =
+        "wss://f02b647af1e54ebd90d24240b53e870a.s1.eu.hivemq.cloud:8884/mqtt";
+      const options = {
+        username: "admin",
+        password: "Admin1234567",
+        clientId: "Web_Client_" + Math.random().toString(16).substr(2, 8),
+      };
+
+      const client = mqtt.connect(broker, options);
+
+      client.on("connect", () => {
+        document.getElementById("status-dot").classList.add("online");
+        document.getElementById("status-text").innerText =
+          "Cloud Connected (Vercel)";
+      });
+
+      client.on("error", (err) => {
+        document.getElementById("status-text").innerText = "Connection Error";
+        console.error(err);
+      });
+
+      function send(topic, message) {
+        if (client.connected) {
+          client.publish(topic, message);
+          console.log(`Sent: ${message} to ${topic}`);
+        } else {
+          alert("Cloud not connected!");
+        }
+      }
+    </script>
+  </body>
+</html>
